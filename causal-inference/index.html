@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>因果推断：从反事实到现代方法</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f; --bg-card: #141418; --bg-card-hover: #1a1a1f;
+  --text: #c8c8cc; --text-dim: #888890; --text-bright: #e8e8ec;
+  --accent: #d4a853; --accent-dim: #8b691f; --accent-glow: rgba(212,168,83,0.12);
+  --border: rgba(255,255,255,0.08); --border-hover: rgba(212,168,83,0.25);
+  --radius: 10px; --radius-sm: 6px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-body); line-height:1.75; -webkit-font-smoothing:antialiased; }
+
+.hero {
+  min-height:90vh; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden; padding:6rem 2rem;
+}
+.hero-bg { position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(212,168,83,0.06) 0%, transparent 70%), radial-gradient(ellipse 40% 50% at 80% 20%, rgba(212,168,83,0.03) 0%, transparent 70%); z-index:0; }
+.hero-content { position:relative; z-index:2; max-width:720px; text-align:center; }
+.hero-kicker { font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent); margin-bottom:1.5rem; }
+.hero h1 { font-family:var(--font-display); font-size:clamp(2.6rem,6vw,4.4rem); font-weight:400; color:var(--text-bright); line-height:1.15; margin-bottom:1.5rem; letter-spacing:-0.01em; }
+.hero h1 em { font-style:italic; color:var(--accent); }
+.hero-sub { font-size:1.05rem; color:var(--text-dim); max-width:480px; margin:0 auto 2.5rem; line-height:1.7; }
+
+.wrapper { max-width:920px; margin:0 auto; padding:0 1.5rem; }
+section { padding:5rem 0; }
+.section-number { font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.2em; color:var(--accent); text-transform:uppercase; margin-bottom:0.6rem; }
+h2 { font-family:var(--font-display); font-size:2.2rem; font-weight:400; color:var(--text-bright); line-height:1.2; margin-bottom:2rem; letter-spacing:-0.01em; }
+h3 { font-family:var(--font-display); font-size:1.3rem; font-weight:400; color:var(--text-bright); margin:2.5rem 0 1rem; }
+p { margin-bottom:1.2rem; font-size:0.98rem; color:var(--text); }
+strong { color:var(--accent); font-weight:500; }
+
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1.25rem; margin:2rem 0; }
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.8rem; transition:border-color .3s,background .3s; }
+.card:hover { border-color:var(--border-hover); background:var(--bg-card-hover); }
+.card h4 { font-family:var(--font-display); font-size:1.1rem; font-weight:400; color:var(--text-bright); margin-bottom:0.6rem; }
+.card p { font-size:0.9rem; color:var(--text-dim); margin:0; }
+.card-tag { display:inline-block; font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); background:var(--accent-glow); padding:0.2em 0.7em; border-radius:99px; margin-bottom:0.8rem; }
+
+.tbl-wrap { overflow-x:auto; margin:2rem 0; border-radius:var(--radius); border:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+thead th { background:var(--bg-card); color:var(--accent); font-family:var(--font-mono); font-size:0.7rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; padding:1rem 1.2rem; text-align:left; border-bottom:1px solid var(--border); }
+tbody td { padding:0.9rem 1.2rem; border-bottom:1px solid var(--border); color:var(--text); }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:var(--bg-card-hover); }
+.formula { font-family:var(--font-mono); font-size:0.92rem; background:rgba(255,255,255,0.04); padding:0.15em 0.5em; border-radius:4px; color:var(--accent); white-space:nowrap; }
+
+.callout { background:var(--accent-glow); border-left:2px solid var(--accent); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:1.2rem 1.5rem; margin:2rem 0; }
+.callout p { margin:0; font-size:0.92rem; color:var(--accent); }
+
+.flow-list { counter-reset:flow; list-style:none; padding:0; margin:2rem 0; }
+.flow-list li { counter-increment:flow; position:relative; padding:1.2rem 0 1.2rem 3.5rem; border-left:1px solid var(--border); margin-left:1.25rem; }
+.flow-list li::before { content:counter(flow); position:absolute; left:-1.25rem; top:1rem; width:2.5rem; height:2.5rem; border-radius:50%; background:var(--bg-card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.85rem; color:var(--accent); }
+.flow-list li h4 { font-family:var(--font-display); font-size:1.05rem; font-weight:400; color:var(--text-bright); margin:0 0 0.3rem; }
+.flow-list li p { margin:0; font-size:0.9rem; color:var(--text-dim); }
+
+.divider { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem 0; opacity:0.35; }
+.divider-line { width:80px; height:1px; background:var(--border); }
+.divider-dot { width:4px; height:4px; border-radius:50%; background:var(--accent); }
+
+.insight-grid { display:grid; gap:2.5rem; margin:2.5rem 0; }
+.insight { position:relative; padding-left:2rem; border-left:1px solid var(--accent-dim); }
+.insight-num { font-family:var(--font-display); font-size:3rem; font-style:italic; color:rgba(212,168,83,0.2); position:absolute; left:-0.3rem; top:-1.4rem; }
+.insight h3 { font-family:var(--font-display); font-size:1.25rem; margin:0 0 0.6rem; color:var(--text-bright); }
+.insight p { font-size:0.92rem; color:var(--text-dim); margin:0; }
+
+.concept-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin:2rem 0; }
+.concept-chip { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1rem 1.2rem; font-size:0.88rem; }
+.concept-chip strong { display:block; font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.06em; margin-bottom:0.3rem; }
+
+.footer { text-align:center; padding:3rem 1.5rem 2rem; border-top:1px solid var(--border); margin-top:3rem; }
+.footer p { font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); letter-spacing:0.1em; margin:0; }
+.footer a { color:var(--accent-dim); text-decoration:none; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.fade-up { animation:fadeUp .9s ease-out both; }
+.fade-up:nth-child(2) { animation-delay:.2s; }
+.fade-up:nth-child(3) { animation-delay:.4s; }
+
+@media(max-width:640px) {
+  section { padding:3rem 0; }
+  h2 { font-size:1.6rem; }
+  .hero { min-height:70vh; padding:4rem 1.5rem; }
+  .hero h1 { font-size:2rem; }
+  .card-grid { grid-template-columns:1fr; }
+  .concept-grid { grid-template-columns:1fr; }
+}
+@media(prefers-reduced-motion:reduce) { * { animation:none!important; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content fade-up">
+    <p class="hero-kicker">Causal Inference · Learning Mode 2026-05-24</p>
+    <h1>因果推断：<br>从 <em>反事实</em> 到现代方法</h1>
+    <p class="hero-sub">以电商数据分析师视角，构建从 AB 实验到双重机器学习的方法体系。不堆公式，讲清每个方法要回答的根本问题。</p>
+  </div>
+</header>
+
+<!-- 01 核心问题 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">01 / 根本矛盾</p>
+    <h2>你永远只能看到硬币的一面</h2>
+    <p>因果推断只有一个核心问题：<strong>给某个用户施加某个策略，结果改变了多少？</strong></p>
+    <div class="callout">
+      <p>个体因果效应 τᵢ = Yᵢ(1) − Yᵢ(0)，但同一个用户你永远只能观测到一种状态——收到策略，或没收到。观测不到的那个，就是<strong>反事实（counterfactual）</strong>。</p>
+    </div>
+    <p>就像你没法同时知道你读研和不读研两条人生线上各自会赚多少钱。走了其中一条，另一条就永远消失了。</p>
+    <p>解决思路是退一步：<strong>不追求个体因果效应，转而估计平均因果效应（ATE）</strong>。</p>
+    <p style="text-align:center;font-family:var(--font-mono);font-size:1.05rem;color:var(--accent);margin:1.8rem 0;">ATE = E[Y(1)] − E[Y(0)]</p>
+
+    <h3>AB 实验如何填上这个窟窿</h3>
+    <p>随机分流 → 两组在所有特征上分布相同 → 对照组的平均结果就是实验组「如果没被干预」的无偏替身。随机化是唯一不需要任何假设就能识别因果效应的办法。</p>
+  </div>
+</section>
+
+<div class="divider"><span class="divider-line"></span><span class="divider-dot"></span><span class="divider-line"></span></div>
+
+<!-- 02 三条路 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">02 / 当 AB 做不了时</p>
+    <h2>三条路绕开混杂因子</h2>
+    <p>核心障碍：<strong>混杂因子（confounder）</strong>——同时影响「是否被处理」和「结果」的变量。没有随机化，处理组和对照组就不再可比较。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>路径</th><th>核心假设</th><th>典型方法</th><th>适用场景</th></tr></thead>
+        <tbody>
+          <tr><td><strong>条件独立</strong></td><td>观测并控制所有混杂因子</td><td>回归、PSM、匹配</td><td>有丰富用户特征数据</td></tr>
+          <tr><td><strong>双重差分</strong></td><td>未观测混杂因子趋势不变</td><td>DiD</td><td>有前后两期面板数据</td></tr>
+          <tr><td><strong>工具变量</strong></td><td>存在只通过处理影响结果的随机冲击</td><td>2SLS</td><td>有天然随机外部变量</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>路径一：条件独立假设</h3>
+    <p>假设控完全部可观测协变量 X 后，处理分配就像随机一样：<span class="formula">(Y(0), Y(1)) ⟂ T ∣ X</span></p>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag">方法一</span>
+        <h4>回归</h4>
+        <p>把 X 扔进方程，β₁ 就是因果效应。暗坑：强制假设 Y 和 X 的线性关系。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag">方法二</span>
+        <h4>匹配 Matching</h4>
+        <p>给实验组每个人在对照组找「长得像的」。暗坑：高维空间里「长得像」越来越难——维数诅咒。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag">方法三</span>
+        <h4>倾向得分 PSM</h4>
+        <p>把高维 X 压缩成一维概率 e(X)=P(T=1|X)，然后匹配/加权。优势：绕开维数诅咒。</p>
+      </div>
+    </div>
+
+    <h3>路径二：双重差分 DiD</h3>
+    <p>不做「我控全了」的假设，改做更弱的假设：<strong>如果没有策略，处理组和对照组会以相同趋势变化</strong>（平行趋势假设）。</p>
+    <div class="callout">
+      <p><strong>DiD = (处理后 − 处理前) − (对照后 − 对照前)</strong><br>第一层差分去组间固有差异，第二层差分去时间趋势。两次减法绕开不可观测混杂因子。</p>
+    </div>
+    <p>可按策略前趋势是否平行来部分检验假设——这是 DiD 相比条件独立路径的核心优势。</p>
+
+    <h3>路径三：工具变量 IV</h3>
+    <p>找一个<strong>只通过策略来影响结果、但本身与混杂因子无关</strong>的变量。三条条件缺一不可：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>条件</th><th>含义</th><th>电商案例：配送速度→复购</th></tr></thead>
+        <tbody>
+          <tr><td>相关性</td><td>IV 与处理变量相关</td><td>暴雨 → 配送延迟 ✓</td></tr>
+          <tr><td>外生性</td><td>IV 与混杂因子无关</td><td>暴雨与用户消费力无关 ✓</td></tr>
+          <tr><td>排他性</td><td>IV 只通过处理变量影响 Y</td><td>暴雨只通过配送延迟影响复购 ✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>IV 在电商里少见的原因：相关性和外生性天然打架。能影响用户行为的变量，往往也跟用户特征相关。</p>
+
+    <p style="margin-top:2rem;font-weight:500;">优先级排序：</p>
+    <ol class="flow-list">
+      <li><h4>能做 AB → 做 AB</h4><p>随机化解决一切，无需任何假设。</p></li>
+      <li><h4>AB 做不了、有面板数据 → DiD</h4><p>平行趋势假设比「我控全了所有变量」更可信。</p></li>
+      <li><h4>面板数据也没有 → PSM/回归</h4><p>在可观测变量假设下做近似推断。</p></li>
+      <li><h4>有干净外部冲击 → IV</h4><p>最后一张牌。没有干净的 IV 就认。</p></li>
+    </ol>
+  </div>
+</section>
+
+<div class="divider"><span class="divider-line"></span><span class="divider-dot"></span><span class="divider-line"></span></div>
+
+<!-- 03 三条铁律 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">03 / 三条铁律</p>
+    <h2>数据的局限比方法的局限更大</h2>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag">铁律一</span>
+        <h4>避免过拟合</h4>
+        <p>因果推断的过拟合比预测模型更致命——预测过拟合只是 AUC 掉几个点，因果过拟合<strong>直接导致错误决策</strong>。必须 holdout 验证，仅靠 p 值筛选 = p-hacking。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag">铁律二</span>
+        <h4>检查异质性</h4>
+        <p>ATE 掩盖真实故事。<strong>平均正确 ≠ 对每个人都正确。</strong>异质性是信号不是噪音——同一个策略对不同人群效果不同。新用户 +20、老用户 -3，全量推就是一边赚一边亏。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag">铁律三</span>
+        <h4>稳健性检验</h4>
+        <p>换方法（回归 vs PSM vs DiD）、换窗口（切掉首尾 5%）、<strong>安慰剂检验</strong>（把策略时间前移，效应消失了吗？）。用这三条回答老板的「你确定？」。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><span class="divider-line"></span><span class="divider-dot"></span><span class="divider-line"></span></div>
+
+<!-- 04 现代因果推断 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">04 / 现代因果推断</p>
+    <h2>机器学习怎么入局</h2>
+    <p>传统方法（PSM、DiD、IV）来自计量经济学，有 50 年历史。近十年，机器学习把这些方法升级了一次。核心变化：<strong>传统方法需要你手动指定 Y 和 X 的关系形式，现代方法让数据自己学。</strong></p>
+
+    <h3>双重机器学习 DML</h3>
+    <div class="callout"><p><strong>直觉：把机器学习当「混杂因子吸尘器」，吸干净后剩下的就是干净的因果信号。</strong></p></div>
+    <ol class="flow-list">
+      <li><h4>拿所有 X 用 ML 预测 Y，取残差</h4><p>得到 X 解释不了的 Y 波动</p></li>
+      <li><h4>拿所有 X 用 ML 预测 T，取残差</h4><p>得到 X 解释不了的 T 波动</p></li>
+      <li><h4>残差 Y 对残差 T 回归</h4><p>系数就是因果效应，有严格置信区间</p></li>
+    </ol>
+    <p>优势：不需要手动写非线性项和交互项；有严谨统计推断；交叉拟合控制了过拟合风险。</p>
+
+    <h3>因果森林 Causal Forest</h3>
+    <p>把决策树的切分逻辑从「哪个特征最能区分 Y 差异」改成<strong>「哪个特征最能区分因果效应差异」</strong>。多棵树取平均 → 因果森林 → 每个用户得到自己的个体因果效应（CATE）。</p>
+
+    <h3>异质性分析三层</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>层级</th><th>方法</th><th>关键点</th></tr></thead>
+        <tbody>
+          <tr><td><strong>第一层</strong></td><td>预设维度分组 + BH 校正</td><td>你现在能做的，但记得多重比较校正</td></tr>
+          <tr><td><strong>第二层</strong></td><td>因果森林自动发现</td><td>数据驱动，不拍脑袋选分组维度</td></tr>
+          <tr><td><strong>第三层</strong></td><td>CATE 指导后续定向实验</td><td>需要百万级样本，把上一轮学到的用于下一轮</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><span class="divider-line"></span><span class="divider-dot"></span><span class="divider-line"></span></div>
+
+<!-- 05 三条暗线 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">05 / 深层认知</p>
+    <h2>三条暗线</h2>
+    <div class="insight-grid">
+      <div class="insight">
+        <span class="insight-num">I</span>
+        <h3>因果推断不是在找因果，是在找随机化的替代品</h3>
+        <p>AB 实验靠物理随机消除反事实，DiD 靠时间差分逼近，PSM 靠条件独立假设——所有方法都是试图在「没有随机」的数据里重建「像是随机」的条件。判断一个方法是否可靠，就看它离随机化有多近。</p>
+      </div>
+      <div class="insight">
+        <span class="insight-num">II</span>
+        <h3>平均正确是决策毒药</h3>
+        <p>ATE 让你觉得能放心做全量决策，但它掩盖了谁受益、谁受害的真相。因果推断的真正价值不在估计一个数字，而在发现「对谁有效、对谁无效」。异质性不是锦上添花——它是因果分析的真正产出。</p>
+      </div>
+      <div class="insight">
+        <span class="insight-num">III</span>
+        <h3>方法的选择权在数据，不在分析师</h3>
+        <p>不是你选 PSM 还是 DiD，是你的<strong>数据结构</strong>决定你能走哪条路。有 AB 就走 AB，有面板就走 DiD，都缺就只能在不完美的假设下做近似推断。真正专业的人知道什么时候认——当数据不支持因果识别时，诚实比精巧更重要。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><span class="divider-line"></span><span class="divider-dot"></span><span class="divider-line"></span></div>
+
+<!-- 06 概念速查 -->
+<section>
+  <div class="wrapper">
+    <p class="section-number">06 / 速查</p>
+    <h2>关键概念</h2>
+    <div class="concept-grid">
+      <div class="concept-chip"><strong>ATE</strong>平均因果效应，所有人平均</div>
+      <div class="concept-chip"><strong>CATE</strong>条件平均因果效应，不同人群各自效应</div>
+      <div class="concept-chip"><strong>反事实</strong>观测不到的那个状态</div>
+      <div class="concept-chip"><strong>混杂因子</strong>同时影响 T 和 Y 的变量</div>
+      <div class="concept-chip"><strong>条件独立</strong>控完 X 后，处理和随机一样</div>
+      <div class="concept-chip"><strong>平行趋势</strong>没策略的话，两组趋势相同</div>
+      <div class="concept-chip"><strong>异质性</strong>同一策略不同人效果不同——是信号，非噪音</div>
+      <div class="concept-chip"><strong>DML</strong>ML 当混杂吸尘器，残差对残差回归</div>
+      <div class="concept-chip"><strong>因果森林</strong>找因果效应差异最大切分点的随机森林</div>
+      <div class="concept-chip"><strong>安慰剂检验</strong>把策略时间前移，效应应消失</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>Learning Mode · 2026-05-24 · <a href="../index.html">← 返回知识库</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base — 大圣的知识库</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080a;
+  --surface: #111114;
+  --surface-2: #18181c;
+  --text: #a8a8b0;
+  --text-bright: #e8e8ec;
+  --text-dim: #6e6e76;
+  --accent: #e8b850;
+  --accent-dim: #7a5f20;
+  --accent-glow: rgba(232,184,80,0.08);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(232,184,80,0.2);
+  --radius: 8px;
+  --radius-lg: 14px;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+/* ── Nav ── */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(8,8,10,0.88); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:0 1.5rem; height:46px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.topbar-home { font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.12em; color:var(--accent); text-transform:uppercase; text-decoration:none; }
+.topbar-count { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:0.06em; }
+
+/* ── Hero ── */
+.hero {
+  min-height:55vh; display:flex; align-items:center; justify-content:center;
+  padding:7rem 2rem 4rem; position:relative; overflow:hidden;
+}
+.hero-grid {
+  position:absolute; inset:0;
+  background-image: linear-gradient(rgba(255,255,255,0.01) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,0.01) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 60% 50% at 50% 45%,#000 25%,transparent 75%);
+}
+.hero-content { position:relative; text-align:center; max-width:640px; }
+.hero-tag { font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.2em; color:var(--accent); text-transform:uppercase; margin-bottom:1.2rem; opacity:0; animation:reveal .5s ease-out forwards; }
+.hero h1 { font-family:var(--font-display); font-size:clamp(2.8rem,6vw,5rem); font-weight:400; color:var(--text-bright); line-height:0.95; letter-spacing:0.01em; margin-bottom:1.2rem; opacity:0; animation:reveal .5s .1s ease-out forwards; }
+.hero h1 span { color:var(--accent); }
+.hero p { font-size:0.95rem; color:var(--text-dim); opacity:0; animation:reveal .5s .2s ease-out forwards; max-width:420px; margin:0 auto; }
+@keyframes reveal { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Categories ── */
+.main-content { max-width:880px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+.section-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1.2rem; margin-top:3rem; }
+.section-header h2 { font-family:var(--font-display); font-size:1.6rem; font-weight:400; color:var(--text-bright); letter-spacing:0.02em; }
+.section-header .count { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; }
+
+.entry-list { display:grid; gap:0.6rem; }
+.entry {
+  display:grid; grid-template-columns:1fr auto;
+  align-items:center; gap:1.5rem;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.3rem 1.6rem;
+  text-decoration:none; color:inherit;
+  transition:border-color .3s, background .3s, transform .2s;
+}
+.entry:hover { border-color:var(--border-hover); background:var(--surface-2); transform:translateX(3px); }
+.entry-title { font-family:var(--font-display); font-size:1.25rem; color:var(--text-bright); letter-spacing:0.02em; margin-bottom:0.3rem; }
+.entry-desc { font-size:0.82rem; color:var(--text-dim); line-height:1.45; }
+.entry-meta { display:flex; gap:1rem; margin-top:0.5rem; font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); letter-spacing:0.06em; }
+.entry-arrow { font-family:var(--font-mono); font-size:1.2rem; color:var(--accent-dim); transition:color .3s; }
+.entry:hover .entry-arrow { color:var(--accent); }
+
+/* ── Stats row ── */
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.5rem; margin:2rem 0; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.2rem; text-align:center; }
+.stat-num { font-family:var(--font-display); font-size:2rem; color:var(--accent); line-height:1; }
+.stat-lbl { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:0.08em; margin-top:.25rem; text-transform:uppercase; }
+
+/* ── Topic tags ── */
+.tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.4rem; }
+.tag { font-family:var(--font-mono); font-size:0.58rem; letter-spacing:0.06em; padding:0.15em 0.55em; border-radius:99px; background:rgba(255,255,255,0.04); color:var(--text-dim); border:1px solid var(--border); }
+.tag.active { background:var(--accent-glow); color:var(--accent); border-color:rgba(232,184,80,0.2); }
+
+/* ── Footer ── */
+.footer { text-align:center; padding:3rem 1.5rem; border-top:1px solid var(--border); }
+.footer p { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:0.1em; margin:0; }
+
+@media(max-width:640px) {
+  .hero { min-height:40vh; padding:5rem 1.2rem 3rem; }
+  .hero h1 { font-size:2rem; }
+  .entry { grid-template-columns:1fr; }
+  .entry-arrow { display:none; }
+}
+@media(prefers-reduced-motion:reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="topbar-home">Knowledge Base</a>
+  <span class="topbar-count">2 个专题</span>
+</div>
+
+<header class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <p class="hero-tag">Learning Distillation</p>
+    <h1>大圣的<br><span>知识库</span></h1>
+    <p>用 Learning Mode 学过的内容，经过深度提炼后沉淀于此。每个专题都是一张高密度知识页。</p>
+  </div>
+</header>
+
+<div style="max-width:880px;margin:0 auto;padding:0 1.5rem;">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num">2</div><div class="stat-lbl">知识专题</div></div>
+    <div class="stat-card"><div class="stat-num">11</div><div class="stat-lbl">核心概念</div></div>
+    <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">暗线洞察</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-lbl">对比表格</div></div>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <div class="section-header">
+    <h2>因果推断 & 实验方法</h2>
+    <span class="count">更新于 2026-05</span>
+  </div>
+  <div class="entry-list">
+    <a href="causal-inference/" class="entry">
+      <div>
+        <div class="entry-title">因果推断：从反事实到现代方法</div>
+        <div class="entry-desc">反事实之困、ATE、AB 实验原理、混杂因子、三条路径（条件独立/DiD/IV）、三条铁律、DML、因果森林、异质性分析三层框架</div>
+        <div class="entry-meta">
+          <span>2026-05-24</span>
+          <span>Learning Mode</span>
+        </div>
+        <div class="tags"><span class="tag">因果推断</span><span class="tag">AB实验</span><span class="tag">DML</span><span class="tag">DiD</span><span class="tag">PSM</span></div>
+      </div>
+      <span class="entry-arrow">&rarr;</span>
+    </a>
+
+    <a href="ab-platform/" class="entry">
+      <div>
+        <div class="entry-title">AB 实验平台 Landing 完全手册</div>
+        <div class="entry-desc">30 天分周路线图、四类利益方地图、三大陷阱因果链、三个不可逆基础设施决策（分流/指标/统计）、方差估计错误四种场景、SRM 检验详解</div>
+        <div class="entry-meta">
+          <span>2026-05-30</span>
+          <span>Learning Mode</span>
+        </div>
+        <div class="tags"><span class="tag">Landing</span><span class="tag">AB平台</span><span class="tag">统计方法</span><span class="tag">团队协作</span></div>
+      </div>
+      <span class="entry-arrow">&rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-header" style="margin-top:3.5rem;">
+    <h2>即将加入</h2>
+    <span class="count">规划中</span>
+  </div>
+  <div class="entry-list">
+    <div class="entry" style="opacity:0.5;cursor:default;pointer-events:none;">
+      <div>
+        <div class="entry-title">统计基础：方差、显著性、统计功效</div>
+        <div class="entry-desc">从直觉理解统计推断核心概念，AB 实验的统计工具箱</div>
+        <div class="entry-meta"><span>即将开始</span></div>
+      </div>
+      <span class="entry-arrow" style="color:var(--text-dim)">· · ·</span>
+    </div>
+    <div class="entry" style="opacity:0.5;cursor:default;pointer-events:none;">
+      <div>
+        <div class="entry-title">增长实验：从假设到决策</div>
+        <div class="entry-desc">实验文化落地、实验评审流程、从数据到业务决策</div>
+        <div class="entry-meta"><span>即将开始</span></div>
+      </div>
+      <span class="entry-arrow" style="color:var(--text-dim)">· · ·</span>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>2026-05-31 · GitHub Pages · 版本由 Git 记录</p>
+</footer>
+
+</body>
+</html>
