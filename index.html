@@ -189,5 +189,26 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); li
   <p>2026-05-31 · GitHub Pages · 版本由 Git 记录</p>
 </footer>
 
+<div class="guide">
+  <details>
+    <summary>如何新增专题</summary>
+    <code>mkdir ~/Desktop/kb/新专题名 &amp;&amp; cp 你的页面.html ~/Desktop/kb/新专题名/index.html</code>
+    <code>git add . &amp;&amp; git commit -m "新增: 专题名" &amp;&amp; git push</code>
+    <span>然后回到首页，在 entry-list 里加一条链接。</span>
+  </details>
+</div>
+
+<style>
+.guide { max-width:880px; margin:0 auto 3rem; padding:0 1.5rem; }
+.guide details { opacity:0.35; transition:opacity .3s; }
+.guide details:hover { opacity:0.7; }
+.guide summary { font-family:var(--font-mono); font-size:0.58rem; color:var(--text-dim); letter-spacing:0.06em; cursor:pointer; list-style:none; }
+.guide summary::marker { display:none; }
+.guide summary::before { content:'+ '; color:var(--text-dim); }
+.guide details[open] summary::before { content:'− '; }
+.guide code { display:block; font-family:var(--font-mono); font-size:0.56rem; color:var(--text-dim); background:var(--surface); padding:0.3rem 0.6rem; margin-top:0.3rem; border-radius:3px; border:1px solid var(--border); }
+.guide span { display:block; font-family:var(--font-mono); font-size:0.55rem; color:var(--text-dim); margin-top:0.3rem; }
+</style>
+
 </body>
 </html>
