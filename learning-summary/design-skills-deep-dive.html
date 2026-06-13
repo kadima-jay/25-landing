@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计 Skill 三部曲 · 深度解剖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@87.5,400;87.5,500;87.5,600;87.5,700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #0f0f0e;
+    --surface: #171715;
+    --surface-hi: #1e1e1b;
+    --border: #2a2925;
+    --border-hi: #3d3c35;
+    --ink: #e8e7e2;
+    --ink-dim: #8a8983;
+    --ink-faint: #55544d;
+    --accent: #6c8cf0;
+    --accent-hover: #8aa3f5;
+    --accent-dim: rgba(108,140,240,0.15);
+    --positive: #4ea885;
+    --negative: #c46158;
+    --warning: #c49a41;
+    --fd: #6c8cf0;
+    --im: #4ea885;
+    --ux: #c49a41;
+
+    --fs-caption: 10px; --fs-label: 11px; --fs-body: 13px;
+    --fs-md: 15px; --fs-lg: 20px; --fs-xl: 32px; --fs-2xl: 42px;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px;
+    --space-4: 16px; --space-5: 20px; --space-6: 24px;
+    --space-8: 32px; --space-10: 40px; --space-12: 48px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 14px;
+    --duration: 180ms;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Instrument Sans','Noto Sans SC',-apple-system,sans-serif;
+    font-size:var(--fs-body);line-height:1.6;color:var(--ink);background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,140,240,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 50% at 85% 85%, rgba(78,168,133,0.025) 0%, transparent 70%);
+  }
+  .skip-link{position:absolute;top:-100px;left:var(--space-4);background:var(--accent);color:#fff;padding:var(--space-2) var(--space-4);border-radius:var(--radius-sm);z-index:100;font-weight:600;text-decoration:none;transition:top var(--duration) var(--ease)}
+  .skip-link:focus{top:var(--space-2)}
+  .app{position:relative;z-index:1}
+
+  /* Hero */
+  .hero{padding:var(--space-12) var(--space-8) var(--space-10);text-align:center;border-bottom:1px solid var(--border)}
+  .hero-tag{font-family:'Geist Mono',monospace;font-size:var(--fs-label);color:var(--accent);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:var(--space-4)}
+  .hero h1{font-size:var(--fs-2xl);font-weight:700;letter-spacing:-0.02em;line-height:1.15;margin-bottom:var(--space-3)}
+  .hero h1 span{color:var(--accent)}
+  .hero-sub{font-size:var(--fs-md);color:var(--ink-dim);max-width:600px;margin:0 auto}
+
+  /* Sticky nav */
+  .topbar{position:sticky;top:0;z-index:50;display:flex;justify-content:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);background:rgba(23,23,21,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .topbar a{font-family:'Geist Mono',monospace;font-size:var(--fs-label);color:var(--ink-dim);text-decoration:none;padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);transition:all var(--duration) var(--ease)}
+  .topbar a:hover{color:var(--ink);background:var(--surface-hi)}
+
+  .content{max-width:960px;margin:0 auto;padding:var(--space-10) var(--space-8)}
+
+  /* Section */
+  .sec{margin-bottom:var(--space-12)}
+  .sec-head{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6);padding-bottom:var(--space-4);border-bottom:1px solid var(--border)}
+  .sec-num{font-family:'Geist Mono',monospace;font-size:var(--fs-label);color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:var(--radius-sm);font-weight:600}
+  .sec h2{font-size:var(--fs-xl);font-weight:600;letter-spacing:-0.01em}
+  .sec h3{font-size:var(--fs-lg);font-weight:600;margin:var(--space-6) 0 var(--space-3);color:var(--ink)}
+  .sec h4{font-size:var(--fs-md);font-weight:600;margin:var(--space-5) 0 var(--space-2)}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-6);margin-bottom:var(--space-5);transition:border-color var(--duration) var(--ease)}
+  .card:hover{border-color:var(--border-hi)}
+
+  /* Insight */
+  .insight{background:var(--accent-dim);border-left:3px solid var(--accent);padding:var(--space-4) var(--space-5);border-radius:0 var(--radius-md) var(--radius-md) 0;margin:var(--space-5) 0}
+  .insight.g{border-left-color:var(--positive);background:rgba(78,168,133,0.12)}
+  .insight.w{border-left-color:var(--warning);background:rgba(196,154,65,0.12)}
+  .insight strong{display:block;font-size:var(--fs-body);color:var(--ink);margin-bottom:var(--space-1)}
+  .insight p{color:var(--ink-dim)}
+
+  /* Tables */
+  .tw{overflow-x:auto;margin:var(--space-4) 0}
+  table{width:100%;border-collapse:collapse;font-size:var(--fs-body)}
+  th{text-align:left;padding:var(--space-3) var(--space-4);color:var(--ink-dim);font-weight:600;font-size:var(--fs-label);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border)}
+  td{padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(255,255,255,0.015)}
+
+  /* Code */
+  code{font-family:'Geist Mono',monospace;font-size:var(--fs-label);background:var(--surface-hi);padding:1px 6px;border-radius:var(--radius-sm);color:var(--accent)}
+  pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);overflow-x:auto;font-family:'Geist Mono',monospace;font-size:var(--fs-label);line-height:1.6;margin:var(--space-4) 0}
+
+  /* Three column compare */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin:var(--space-5) 0}
+  @media(max-width:768px){.grid3{grid-template-columns:1fr}}
+  .grid3 .col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)}
+  .grid3 .col h5{font-family:'Geist Mono',monospace;font-size:var(--fs-label);margin-bottom:var(--space-3)}
+  .grid3 .col.fd h5{color:var(--fd)}.grid3 .col.im h5{color:var(--im)}.grid3 .col.ux h5{color:var(--ux)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--fs-caption);margin:2px;background:var(--accent-dim);color:var(--accent)}
+  .tag.fd{background:rgba(108,140,240,0.15);color:var(--fd)}
+  .tag.im{background:rgba(78,168,133,0.15);color:var(--im)}
+  .tag.ux{background:rgba(196,154,65,0.15);color:var(--ux)}
+
+  /* Screenshot */
+  .screenshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);margin:var(--space-5) 0}
+  .screenshot-grid figure{margin:0}
+  .screenshot-grid img{width:100%;border-radius:var(--radius-md);border:1px solid var(--border);transition:border-color var(--duration) var(--ease)}
+  .screenshot-grid img:hover{border-color:var(--border-hi)}
+  .screenshot-grid figcaption{font-size:var(--fs-caption);color:var(--ink-dim);text-align:center;margin-top:var(--space-2)}
+  .screenshot{width:100%;border-radius:var(--radius-lg);border:1px solid var(--border);margin:var(--space-4) 0}
+
+  /* Process */
+  .flow{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:var(--space-5) 0;font-family:'Geist Mono',monospace;font-size:var(--fs-label);justify-content:center}
+  .flow-step{background:var(--surface);border:1px solid var(--border);padding:var(--space-3) var(--space-5);border-radius:var(--radius-sm);text-align:center;line-height:1.4}
+  .flow-step strong{color:var(--accent);display:block}
+  .flow-arrow{color:var(--ink-faint);font-size:var(--fs-lg)}
+
+  /* Decision tree */
+  .decision{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-6);margin:var(--space-5) 0}
+  .decision h4{font-family:'Geist Mono',monospace;color:var(--warning);margin-top:0;margin-bottom:var(--space-4)}
+  .decision-tree{font-family:'Geist Mono',monospace;font-size:var(--fs-label);line-height:2;white-space:pre;overflow-x:auto}
+
+  /* Bans */
+  .ban-list{list-style:none;padding:0}
+  .ban-list li{padding:var(--space-2) 0;border-bottom:1px solid var(--border);display:flex;gap:var(--space-3);align-items:baseline}
+  .ban-list li:last-child{border-bottom:none}
+  .ban-list .ban-icon{color:var(--negative);font-weight:700;flex-shrink:0}
+  .ban-list .ban-why{color:var(--ink-dim);font-size:var(--fs-body)}
+
+  /* Strategy badge */
+  .strategy{display:inline-block;padding:4px var(--space-3);border-radius:var(--radius-sm);font-size:var(--fs-caption);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-right:var(--space-2)}
+  .strategy.restrained{background:rgba(108,140,240,0.15);color:var(--fd)}
+  .strategy.committed{background:rgba(78,168,133,0.2);color:var(--positive)}
+  .strategy.full-palette{background:rgba(196,154,65,0.2);color:var(--warning)}
+  .strategy.drenched{background:rgba(196,97,88,0.2);color:var(--negative)}
+
+  .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,0.1)}
+
+  .footer{border-top:1px solid var(--border);padding:var(--space-8);text-align:center;color:var(--ink-faint);font-size:var(--fs-caption)}
+
+  @media(max-width:480px){
+    .hero h1{font-size:var(--fs-xl)}
+    .content{padding:var(--space-5) var(--space-4)}
+    .topbar{gap:var(--space-1)}
+    .topbar a{padding:var(--space-1) var(--space-2);font-size:var(--fs-caption)}
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">跳到主内容</a>
+
+<div class="app">
+  <header class="hero">
+    <div class="hero-tag">Design Skills · 深度解剖</div>
+    <h1>三个设计 Skill 的<span>设计哲学</span>、<span>工程指纹</span>与<span>协作密码</span></h1>
+    <p class="hero-sub">不只是"怎么用"，而是每个 skill 的思维模型、默认偏好、盲区和边界。6 个真实 case 对比，20+ 张截图，设计 token 全量分析。</p>
+  </header>
+
+  <nav class="topbar" aria-label="快速导航">
+    <a href="#overview">总览对比</a>
+    <a href="#fd">frontend-design</a>
+    <a href="#im">impeccable</a>
+    <a href="#ux">ui-ux-pro-max</a>
+    <a href="#cases">Case 对比</a>
+    <a href="#pipeline">编排模式</a>
+    <a href="#decision">决策框架</a>
+    <a href="#tokens">Token 分析</a>
+    <a href="#takeaways">行动清单</a>
+  </nav>
+
+  <main id="main" class="content">
+
+    <!-- ============ OVERVIEW ============ -->
+    <section id="overview" class="sec">
+      <div class="sec-head"><span class="sec-num">00</span><h2>总览：三个 Skill 的本质定位</h2></div>
+
+      <div class="grid3">
+        <div class="col fd">
+          <h5>🎨 frontend-design</h5>
+          <p style="color:var(--ink-dim);margin-bottom:var(--space-3)"><strong>灵魂：调性。</strong>每次产出审美方向不同，拒绝收敛。</p>
+          <span class="tag fd">美学优先</span><span class="tag fd">不可预测</span><span class="tag fd">字体大胆</span><span class="tag fd">氛围营造</span>
+          <p style="margin-top:var(--space-3);font-size:var(--fs-caption);color:var(--ink-faint)">57 组字体搭配 / 无预设风格 / 单 accent 策略 / 暗色偏好</p>
+        </div>
+        <div class="col im">
+          <h5>🔧 impeccable</h5>
+          <p style="color:var(--ink-dim);margin-bottom:var(--space-3)"><strong>灵魂：工程正确。</strong>代码质量、状态完整、a11y 规范是底线。</p>
+          <span class="tag im">工程纪律</span><span class="tag im">a11y 系统</span><span class="tag im">OKLCH 色空间</span><span class="tag im">状态完整</span>
+          <p style="margin-top:var(--space-3);font-size:var(--fs-caption);color:var(--ink-faint)">26 个命令 / 绝对禁令清单 / 色策略框架 / 亮色偏好</p>
+        </div>
+        <div class="col ux">
+          <h5>📐 ui-ux-pro-max</h5>
+          <p style="color:var(--ink-dim);margin-bottom:var(--space-3)"><strong>灵魂：系统化。</strong>161 条规则 / 67 种风格 / 完整设计推理链。</p>
+          <span class="tag ux">系统化</span><span class="tag ux">推理链</span><span class="tag ux">数据密度</span><span class="tag ux">10 栈覆盖</span>
+          <p style="margin-top:var(--space-3);font-size:var(--fs-caption);color:var(--ink-faint)">10 级优先级 / 57 组字体 / 161 色板 / 99 UX 准则</p>
+        </div>
+      </div>
+
+      <div class="insight">
+        <strong>💡 一句话定位</strong>
+        <p>frontend-design 回答"长什么样"（美学方向），ui-ux-pro-max 回答"为什么这样设计"（设计推理），impeccable 回答"怎么做到位"（工程实现）。三者不是竞争，是同一流水线的三个工位。</p>
+      </div>
+    </section>
+
+    <!-- ============ FRONTEND-DESIGN ============ -->
+    <section id="fd" class="sec">
+      <div class="sec-head"><span class="sec-num">01</span><h2>frontend-design — 美学方向的定调者</h2></div>
+
+      <div class="card">
+        <h3>核心哲学</h3>
+        <p style="font-size:var(--fs-md);color:var(--ink);margin-bottom:var(--space-3)">
+          <strong>"Choose a BOLD aesthetic direction and execute it with precision."</strong>
+        </p>
+        <p style="color:var(--ink-dim)">
+          不是"做个好看的界面"，而是"<strong>选一个极端审美方向，然后执行到极致</strong>"。
+          大胆极繁和克制极简都可以——关键是有意图，不是有强度。<br>
+          核心约束：<strong>永远不收敛到同一个风格。</strong>每次产出必须不同。
+        </p>
+      </div>
+
+      <h3>设计思维框架（必须分四步走）</h3>
+      <div class="grid3">
+        <div class="col fd">
+          <h5>1. Purpose 目的</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">这个界面解决什么问题？谁在用？什么场景？</p>
+        </div>
+        <div class="col fd">
+          <h5>2. Tone 调性</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">选一个极端：brutally minimal → maximalist chaos → retro-futuristic → organic/natural → luxury/refined → editorial/magazine → brutalist/raw → art deco → industrial...</p>
+        </div>
+        <div class="col fd">
+          <h5>3. Differentiation 记忆点</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">什么东西让人忘不掉？就一个东西。</p>
+        </div>
+      </div>
+
+      <h3>美学执行指南（六大维度）</h3>
+      <div class="tw"><table>
+        <tr><th>维度</th><th>要求</th><th>禁止</th></tr>
+        <tr>
+          <td><strong>Typography 字体</strong></td>
+          <td>独特、有个性的字体选择。Display + Body 配对。意外的字体搭配。</td>
+          <td>Arial、Inter、Roboto、系统字体、Space Grotesk（跨产出收敛）</td>
+        </tr>
+        <tr>
+          <td><strong>Color 配色</strong></td>
+          <td>CSS 变量一致性。主导色 + 锐利 accent。大胆的不对称用色。</td>
+          <td>均匀分布调色板、紫色渐变白底、畏缩的配色</td>
+        </tr>
+        <tr>
+          <td><strong>Motion 动画</strong></td>
+          <td>高影响力时刻：一次精心编排的页面加载（staggered reveals）胜过散落的微交互。CSS 优先。</td>
+          <td>散落无意义的微交互、无 reduced-motion 支持</td>
+        </tr>
+        <tr>
+          <td><strong>Spatial 空间</strong></td>
+          <td>意外布局。不对称。重叠。对角线流动。打破网格。大量留白 OR 受控密度。</td>
+          <td>可预测的居中布局、等宽卡片网格、标准 SaaS 模板</td>
+        </tr>
+        <tr>
+          <td><strong>Background 背景</strong></td>
+          <td>营造氛围和深度。渐变网格、噪点纹理、几何图案、分层透明、戏剧阴影、装饰边框。</td>
+          <td>纯色背景（除非极度克制风格需要）</td>
+        </tr>
+        <tr>
+          <td><strong>Complexity 复杂度</strong></td>
+          <td>匹配审美愿景。极繁 = 复杂代码+大量动画。极简 = 克制+精确+间距+字体。</td>
+          <td>审美方向和实现复杂度脱节</td>
+        </tr>
+      </table></div>
+
+      <h3>实际 Case 中的设计指纹</h3>
+      <div class="screenshot-grid">
+        <figure>
+          <img src="screenshots/case1-frontend-design.png" alt="frontend-design Case 1 - Editorial Terminal 风格" loading="lazy">
+          <figcaption>Case 1: 暗色 Editorial Terminal — 暖琥珀 + DM Serif + Space Mono</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/case2-frontend-design.png" alt="frontend-design Case 2 - Ink Wash Data 风格" loading="lazy">
+          <figcaption>Case 2: 暗色 Ink Wash Data — 靛蓝 accent + Instrument Sans + 径向光晕</figcaption>
+        </figure>
+      </div>
+
+      <div class="insight">
+        <strong>🔑 frontend-design 的核心价值</strong>
+        <p>它提供的是<strong>不可预测性</strong>。两次调用，同样的 prompt，会得到完全不同的审美方向。这在需要「跳出 AI slop 审美」的场景里是最大优势。</p>
+      </div>
+
+      <div class="insight w">
+        <strong>⚠️ frontend-design 的盲区</strong>
+        <p>a11y 不系统（缺乏 skip link、aria-label 标注）；状态不完整（hover/focus/active 缺失）；工程细节靠自觉（没有 z-index scale、没有 reduced-motion 全量覆盖）。<strong>它不关心代码质量，只关心代码好不好看。</strong></p>
+      </div>
+    </section>
+
+    <!-- ============ IMPECCABLE ============ -->
+    <section id="im" class="sec">
+      <div class="sec-head"><span class="sec-num">02</span><h2>impeccable — 工程纪律的守护者</h2></div>
+
+      <div class="card">
+        <h3>核心哲学</h3>
+        <p style="font-size:var(--fs-md);color:var(--ink);margin-bottom:var(--space-3)">
+          <strong>"Production-grade, not prototypes. Take no shortcuts. Don't stop until complete."</strong>
+        </p>
+        <p style="color:var(--ink-dim)">
+          不是"检查一下代码"，而是"<strong>从工程角度保证交付质量</strong>"。26 个子命令覆盖 Build / Evaluate / Refine / Enhance / Fix / Iterate 六大类。
+          每次操作前必须加载对应的 reference 文件。有<strong>绝对禁令清单</strong>——某些模式被认为永远是错的。
+        </p>
+      </div>
+
+      <h3>四个硬性前置步骤（Setup）</h3>
+      <div class="flow">
+        <div class="flow-step"><strong>1. 加载子命令 reference</strong>必须读 reference/&lt;command&gt;.md</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>2. 读取项目代码</strong>至少读一个 token/theme/组件文件</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>3. 读取寄存器</strong>brand.md 或 product.md（必读）</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>4. 新项目选品牌色</strong>OKLCH 色空间（已有品牌色则跳过）</div>
+      </div>
+
+      <h3>四大设计纪律</h3>
+      <div class="grid3">
+        <div class="col im">
+          <h5>Color 颜色纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • 正文对比度 ≥4.5:1 硬指标<br>
+            • 占位符也要 4.5:1<br>
+            • 灰字在有色底上 = 错<br>
+            • 用底色自身色相的深色替代灰<br>
+            • <strong>OKLCH 色空间</strong>（感知均匀 + P3 广色域）
+          </p>
+        </div>
+        <div class="col im">
+          <h5>Typography 字体纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • 行宽上限 65–75ch<br>
+            • 层级 ratio ≥1.25<br>
+            • 字体族 ≤3（display + body + mono）<br>
+            • 相似字体不配对<br>
+            • 无全大写正文<br>
+            • <code>text-wrap: balance</code> on h1-h3
+          </p>
+        </div>
+        <div class="col im">
+          <h5>Layout 布局纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • Flexbox 1D / Grid 2D<br>
+            • 语义 z-index scale<br>
+            • 卡片是惰性选择<br>
+            • 嵌套卡片永远错<br>
+            • 用 <code>repeat(auto-fit, minmax(280px,1fr))</code> 做免断点响应式
+          </p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="col im">
+          <h5>Motion 动画纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • 不动画 CSS 布局属性<br>
+            • ease-out-quart/quint/expo<br>
+            • 无 bounce / elastic<br>
+            • <strong>reduced-motion 不是可选项</strong><br>
+            • 揭示动画不能 gate 内容可见性<br>
+            • blur/backdrop-filter/clip-path 可用
+          </p>
+        </div>
+        <div class="col im">
+          <h5>Copy 文案纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • 无 em dash<br>
+            • 无营销 buzzword<br>
+            • 按钮 = 动词+宾语<br>
+            • 链接文字独立有意义<br>
+            • 每句话都在干活
+          </p>
+        </div>
+        <div class="col im">
+          <h5>Interaction 交互纪律</h5>
+          <p style="font-size:var(--fs-body);color:var(--ink-dim)">
+            • Dropdown 在 overflow:hidden 里会被裁切 → 用 dialog/popover API 或 portal<br>
+            • 键盘可达<br>
+            • 状态可感知
+          </p>
+        </div>
+      </div>
+
+      <h3>绝对禁令清单（Match-and-Refuse）</h3>
+      <ul class="ban-list" style="padding-left:0">
+        <li><span class="ban-icon">✕</span> <span><strong>Side-stripe borders</strong> — 左侧/右侧 >1px 彩色边框做卡片强调。<span class="ban-why">用完整边框、背景色或前置图标替代。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Gradient text</strong> — background-clip: text 渐变文字。<span class="ban-why">纯装饰，从不有意义。用单色+weight/size 强调。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Glassmorphism as default</strong> — 装饰性玻璃态。<span class="ban-why">极少情况有意义，永远不是默认。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Hero-metric template</strong> — 大数字+小标签+梯度 accent。<span class="ban-why">SaaS 陈词滥调。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Identical card grids</strong> — 同尺寸图标+标题+文字卡片无限重复。<span class="ban-why">这是 AI 的默认输出，不是设计。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Eyebrow above every section</strong> — 每个标题上方的小大写标签。<span class="ban-why">2023 年 AI 语法。一个故意的 brand kicker 可以，每个 section 都有就是 AI 脚手架。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Numbered sections (01/02/03)</strong> — 每个 section 标号。<span class="ban-why">当且仅当序号承载信息时才用。</span></span></li>
+        <li><span class="ban-icon">✕</span> <span><strong>Text overflow</strong> — 长标题+大字号+窄网格 = 溢出。<span class="ban-why">每个断点测标题。</span></span></li>
+      </ul>
+
+      <h3>颜色策略框架（四层递进）</h3>
+      <p style="color:var(--ink-dim);margin-bottom:var(--space-4)">新项目选色前必须选一种策略。这是 impeccable 独有的框架：</p>
+      <p>
+        <span class="strategy restrained">Restrained</span> 染色中性色 + 单 accent ≤10%。产品默认；品牌极简。<br>
+        <span class="strategy committed">Committed</span>  一个饱和色承载 30–60% 表面。品牌默认；身份驱动页面。<br>
+        <span class="strategy full-palette">Full Palette</span> 3–4 命名色角色。品牌 campaign；产品数据可视化。<br>
+        <span class="strategy drenched">Drenched</span>  表面就是颜色本身。品牌 hero 页；campaign 页。
+      </p>
+
+      <div class="insight g">
+        <strong>🔑 impeccable 的核心价值</strong>
+        <p>提供<strong>工程质量的底线</strong>。不会主动做大胆设计决策（那是 frontend-design 的事），但能保证做出来的东西对比度达标、状态完整、键盘可达、动画不卡、z-index 不会乱。</p>
+      </div>
+
+      <div class="insight w">
+        <strong>⚠️ impeccable 的盲区</strong>
+        <p>审美上偏保守。系统字体栈缺乏个性。不会主动加氛围层（径向光晕、噪点纹理）。对「品牌个性」的感知弱于 frontend-design。需要外部注入美学方向。</p>
+      </div>
+    </section>
+
+    <!-- ============ UI-UX-PRO-MAX ============ -->
+    <section id="ux" class="sec">
+      <div class="sec-head"><span class="sec-num">03</span><h2>ui-ux-pro-max — 设计系统的推理引擎</h2></div>
+
+      <div class="card">
+        <h3>核心哲学</h3>
+        <p style="font-size:var(--fs-md);color:var(--ink);margin-bottom:var(--space-3)">
+          <strong>"Comprehensive design guide with reasoning rules. Searchable database with priority-based recommendations."</strong>
+        </p>
+        <p style="color:var(--ink-dim)">
+          不是"教你做设计"，而是<strong>一个可搜索的设计知识库 + 推理引擎</strong>。
+          10 级优先级、7 个可查域（product/style/color/typography/ux/chart/landing）、10 个技术栈覆盖。
+          核心能力是<strong>根据产品类型推理出最合适的设计系统</strong>。
+        </p>
+      </div>
+
+      <h3>10 级优先级体系（关键决策树）</h3>
+      <div class="tw"><table>
+        <tr><th>P</th><th>类别</th><th>严重度</th><th>核心检查项</th><th>反模式</th></tr>
+        <tr><td>1</td><td>Accessibility</td><td><span style="color:var(--negative)">CRITICAL</span></td><td>对比度 4.5:1 · Alt 文字 · 键盘导航 · Aria</td><td>移除 focus ring · 无标签 icon-only 按钮</td></tr>
+        <tr><td>2</td><td>Touch & Interaction</td><td><span style="color:var(--negative)">CRITICAL</span></td><td>44×44px 最小触控 · 8px+ 间距 · 加载反馈</td><td>纯 hover 依赖 · 瞬时状态变化 (0ms)</td></tr>
+        <tr><td>3</td><td>Performance</td><td><span style="color:var(--warning)">HIGH</span></td><td>WebP/AVIF · 懒加载 · Reserve space (CLS<0.1)</td><td>布局抖动 · CLS 超标</td></tr>
+        <tr><td>4</td><td>Style Selection</td><td><span style="color:var(--warning)">HIGH</span></td><td>匹配产品类型 · 一致性 · SVG 图标</td><td>混用 flat 和拟物 · Emoji 做图标</td></tr>
+        <tr><td>5</td><td>Layout & Responsive</td><td><span style="color:var(--warning)">HIGH</span></td><td>Mobile-first 断点 · Viewport meta · 无横滚</td><td>横滚 · 固定 px 容器 · 禁用缩放</td></tr>
+        <tr><td>6</td><td>Typography & Color</td><td>MEDIUM</td><td>Base 16px · Line-height 1.5 · 语义色 token</td><td>正文 <12px · 灰上加灰 · 组件里裸 hex</td></tr>
+        <tr><td>7</td><td>Animation</td><td>MEDIUM</td><td>150–300ms · 动效传达含义 · 空间连续性</td><td>纯装饰动画 · 动画 width/height · 无 reduced-motion</td></tr>
+        <tr><td>8</td><td>Forms & Feedback</td><td>MEDIUM</td><td>可见标签 · 就近错误 · 辅助文字 · 渐进展示</td><td>placeholder 即 label · 错误只在顶部</td></tr>
+        <tr><td>9</td><td>Navigation</td><td><span style="color:var(--warning)">HIGH</span></td><td>可预测返回 · Bottom nav ≤5 · Deep linking</td><td>过载导航 · 破坏返回行为</td></tr>
+        <tr><td>10</td><td>Charts & Data</td><td>LOW</td><td>图例 · Tooltip · 无障碍色</td><td>纯颜色传递含义</td></tr>
+      </table></div>
+
+      <div class="insight">
+        <strong>💡 关键设计：优先级就是决策顺序</strong>
+        <p>P1 Accessibility > P2 Touch > P3 Performance > P4 Style。这意味着<strong>样式选择（P4）要让位于无障碍（P1）和触控（P2）</strong>。如果配色好看但对比度不够，改配色，不能放弃对比度。这个优先级体系是 ui-ux-pro-max 区别于「纯美学 skill」的根本原因。</p>
+      </div>
+
+      <h3>工作流程：四步法</h3>
+      <div class="flow">
+        <div class="flow-step"><strong>Step 1</strong>分析需求<br>产品类型/受众/风格关键词</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Step 2</strong>生成设计系统<br>--design-system（必须）</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Step 2b</strong>持久化<br>--persist 写入文件</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Step 3</strong>补充搜索<br>--domain 深入各维度</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><strong>Step 4</strong>技术栈指南<br>--stack 实现细节</div>
+      </div>
+
+      <h3>可搜索域（7 个）</h3>
+      <div class="tw"><table>
+        <tr><th>域</th><th>用途</th><th>示例关键词</th></tr>
+        <tr><td><code>product</code></td><td>产品类型推荐</td><td>SaaS, e-commerce, portfolio, healthcare, beauty</td></tr>
+        <tr><td><code>style</code></td><td>UI 风格、颜色、效果</td><td>glassmorphism, minimalism, dark mode, brutalism</td></tr>
+        <tr><td><code>typography</code></td><td>字体配对</td><td>elegant, playful, professional, modern</td></tr>
+        <tr><td><code>color</code></td><td>配色方案</td><td>saas, ecommerce, healthcare, fintech</td></tr>
+        <tr><td><code>landing</code></td><td>落地页结构、CTA 策略</td><td>hero, hero-centric, testimonial, pricing</td></tr>
+        <tr><td><code>chart</code></td><td>图表类型、库推荐</td><td>trend, comparison, timeline, funnel</td></tr>
+        <tr><td><code>ux</code></td><td>最佳实践、反模式</td><td>animation, accessibility, z-index, loading</td></tr>
+      </table></div>
+
+      <h3>设计系统输出格式（Master + Overrides 模式）</h3>
+      <pre># --persist 后生成的文件结构
+design-system/
+├── MASTER.md              # 全局 Source of Truth
+└── pages/
+    ├── dashboard.md       # 页面级覆盖（覆盖 Master）
+    ├── settings.md        # 另一个页面的设计规则
+    └── landing.md         # ...</pre>
+
+      <div class="insight">
+        <strong>🔑 ui-ux-pro-max 的核心价值</strong>
+        <p>提供<strong>设计决策的可解释性</strong>。不是"我觉得蓝色好看"，而是"因为这是 B2B SaaS 数据分析产品，根据推理规则 #XX，推荐 #1E40AF 作为主色，因为...". 这个推理链条让后续的迭代有据可依，也让设计系统可以跨会话复用。</p>
+      </div>
+
+      <div class="insight w">
+        <strong>⚠️ ui-ux-pro-max 的盲区</strong>
+        <p>设计选择偏「安全」。蓝色 (#1E40AF) 和琥珀色 (#D97706) 高频出现，缺乏 frontend-design 那种「意外的字体搭配」和「不对称布局」的个性。适合做 design system 的框架，但需要 frontend-design 在这个框架内做创意突破。</p>
+      </div>
+    </section>
+
+    <!-- ============ CASES ============ -->
+    <section id="cases" class="sec">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Case 对比 — 同一数据 × 三种设计哲学</h2></div>
+
+      <p style="color:var(--ink-dim);margin-bottom:var(--space-5)">
+        两组 case。Case 1：三个 skill 独立生成同一份数据（用户活跃度洞察），看各自的"设计指纹"。
+        Case 2：用 pipeline 模式（ui-ux-pro-max 出设计系统 → frontend-design 实现 → impeccable 打磨），看三者如何协同。
+      </p>
+
+      <h3>Case 1 — 独立对比：同一 prompt，三种理解</h3>
+      <div class="screenshot-grid">
+        <figure>
+          <img src="screenshots/case1-frontend-design.png" alt="frontend-design 版本" loading="lazy">
+          <figcaption><strong>frontend-design</strong>: 暗色 Editorial Terminal — 暖琥珀 accent · DM Serif + Space Mono · 氛围 glow</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/case1-impeccable.png" alt="impeccable 版本" loading="lazy">
+          <figcaption><strong>impeccable</strong>: 亮色 Product-restrained — OKLCH 青绿 · 系统字体栈 · 阴影层级</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/case1-uiuxpromax.png" alt="ui-ux-pro-max 版本" loading="lazy">
+          <figcaption><strong>ui-ux-pro-max</strong>: 亮色 Data-Dense Dashboard — #1E40AF 蓝 · Fira Code + Fira Sans · 卡片容器</figcaption>
+        </figure>
+      </div>
+
+      <h4>Case 1 核心差异</h4>
+      <div class="tw"><table>
+        <tr><th>维度</th><th>frontend-design</th><th>impeccable</th><th>ui-ux-pro-max</th></tr>
+        <tr><td>色调选择</td><td><span class="swatch" style="background:#1a1a1d"></span>暗色</td><td><span class="swatch" style="background:#f5f5f0"></span>亮色</td><td><span class="swatch" style="background:#F8FAFC"></span>亮色</td></tr>
+        <tr><td>色空间</td><td>HEX</td><td><strong>OKLCH</strong></td><td>HEX</td></tr>
+        <tr><td>主强调色</td><td><span class="swatch" style="background:#e2a652"></span>琥珀 #e2a652</td><td><span class="swatch" style="background:#5cb8a5"></span>青绿 oklch(0.58 0.18 165)</td><td><span class="swatch" style="background:#1E40AF"></span>蓝 #1E40AF</td></tr>
+        <tr><td>字体</td><td>DM Serif + Space Mono + 宋体</td><td>系统字体栈</td><td>Fira Code + Fira Sans</td></tr>
+        <tr><td>设计理念</td><td>Editorial Terminal · 杂志终端风</td><td>Product-restrained · 工程克制风</td><td>Data-Dense Dashboard · 信息密度优先</td></tr>
+        <tr><td>Sparkline 交互</td><td>hover 显现所有数据点</td><td>hover 放大点 + aria 标注</td><td>hover 单点 tooltip 浮层</td></tr>
+        <tr><td>辅助指标</td><td>纯文字行</td><td>纯文字行</td><td>灰底卡片容器</td></tr>
+        <tr><td>a11y 程度</td><td>基础 (语义 HTML)</td><td>系统 (aria-label · skip link · sr-only)</td><td>结构化 (aria · role · 标题层级)</td></tr>
+        <tr><td>工程纪律</td><td>CSS 变量 · 基础动画 · glow 氛围</td><td>四态 · reduced-motion · z-index scale</td><td>完整设计 token · 响应式 breakpoint</td></tr>
+        <tr><td>氛围营造</td><td><strong>最强</strong> (glow shadows · 暗色情绪)</td><td>中等 (阴影层级 · 干净但不惊艳)</td><td>弱 (功能导向 · 数据优先)</td></tr>
+      </table></div>
+
+      <h3>Case 2 — Pipeline 融合：1+1+1 > 3</h3>
+      <figure>
+        <img src="screenshots/combined.png" alt="Mercury Analytics Combined Dashboard" class="screenshot" loading="lazy">
+        <figcaption style="text-align:center;margin-top:var(--space-2);color:var(--ink-dim)">Mercury Analytics · 三 skill 融合产物（Ink Wash Data 暗色仪表盘）</figcaption>
+      </figure>
+
+      <h4>融合矩阵：每个维度来自谁</h4>
+      <div class="tw"><table>
+        <tr><th>产出维度</th><th>来源</th><th>你看到的就是它的指纹</th></tr>
+        <tr><td>暗色 Ink Wash 美学 · 径向光晕 · 不对称 KPI 网格 (1.3:1:1:0.9) · 交错入场动画</td><td><span class="tag fd">frontend-design</span></td><td>Instrument Sans + Geist Mono · 单一靛蓝 accent · 氛围层</td></tr>
+        <tr><td>WCAG AA 无障碍 · skip link · aria-label · role="region" · sr-only 标题层级</td><td><span class="tag ux">ui-ux-pro-max</span></td><td>完整朗读数据 · 图表 role="img" · 注册列表语义化</td></tr>
+        <tr><td>四态齐全 · prefers-reduced-motion 全量归零 · 语义 z-index scale · tabular-nums</td><td><span class="tag im">impeccable</span></td><td>无 side-stripe border · 无 gradient text · 无 glassmorphism</td></tr>
+        <tr><td>对比度 14.5:1 (ink on paper) · 5.8:1 (ink-dim on surface) · 2px focus ring</td><td><span class="tag ux">ux</span> + <span class="tag im">im</span></td><td>两个 skill 在对比度上重叠验证</td></tr>
+        <tr><td>1024px / 768px / 480px 三档 breakpoint · 图表 min-height 防塌缩</td><td>三者共同</td><td>三个 skill 各自贡献了响应式的一部分</td></tr>
+      </table></div>
+
+      <div class="insight">
+        <strong>💡 Case 2 的核心发现：Skill Orchestration Pattern</strong>
+        <p>
+          三个 skill 串联不是简单的「各做一步」。关键操作细节：<br>
+          1️⃣ ui-ux-pro-max 的 markdown 输出 <strong>原样粘贴</strong> 进 frontend-design 的 prompt — 这强制它在设计系统约束内发挥<br>
+          2️⃣ impeccable 的 prompt 里 <strong>显式列出</strong> 额外关注点 — 因为它不会主动加 a11y<br>
+          3️⃣ <strong>同一会话内执行</strong> — 后面的 skill 能读到前面的上下文，减少重复沟通
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ PIPELINE ============ -->
+    <section id="pipeline" class="sec">
+      <div class="sec-head"><span class="sec-num">05</span><h2>编排模式 — 如何让三个 Skill 协同工作</h2></div>
+
+      <h3>标准 Pipeline</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <strong>Step 1</strong>
+          <span style="color:var(--ux)">ui-ux-pro-max</span><br>
+          生成设计系统 markdown<br>
+          <code>--design-system</code>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">
+          <strong>Step 2</strong>
+          <span style="color:var(--fd)">frontend-design</span><br>
+          基于设计系统实现<br>
+          加美学个性
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">
+          <strong>Step 3</strong>
+          <span style="color:var(--im)">impeccable</span><br>
+          工程打磨<br>
+          <code>polish</code> 命令
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>适用场景 vs 不适用场景</h3>
+        <div class="grid3">
+          <div class="col fd"><h5>✅ 适用</h5><p style="font-size:var(--fs-body);color:var(--ink-dim)">需要交付级质量的 UI · 新项目从头搭建 · 品牌敏感的设计 · 需要完整 a11y 支持</p></div>
+          <div class="col im"><h5>❌ 不适用</h5><p style="font-size:var(--fs-body);color:var(--ink-dim)">快速原型验证 · 纯后端逻辑 · 只需调整一个组件的颜色/间距（此时用单个 skill 更高效）</p></div>
+          <div class="col ux"><h5>⚡ 变体</h5><p style="font-size:var(--fs-body);color:var(--ink-dim)">已有设计系统 → 跳过 Step 1<br>已有 HTML → 从 Step 3 开始<br>只需美学方向 → 只用 Step 1+2</p></div>
+        </div>
+      </div>
+
+      <div class="insight g">
+        <strong>🔑 编排的核心规则</strong>
+        <p>
+          <strong>1. 显式约束传递。</strong>Pipeline 的质量取决于上游输出对下游的约束强度。ui-ux-pro-max 的 markdown 输出如果不原样传给 frontend-design，后者会自由发散。<br>
+          <strong>2. 补充盲区。</strong>每个 skill 有自己的盲区。impeccable 不会主动加 a11y → 在 prompt 里显式列出来。ui-ux-pro-max 偏安全 → 在 frontend-design 的 prompt 里鼓励突破。<br>
+          <strong>3. 同一上下文。</strong>三个 skill 在同一会话执行时，后面的能读到前面的完整输出。跨会话会丢失上下文，大量信息需要重复传递。
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ DECISION ============ -->
+    <section id="decision" class="sec">
+      <div class="sec-head"><span class="sec-num">06</span><h2>决策框架 — 什么时候用哪个</h2></div>
+
+      <div class="decision">
+        <h4>快速决策树</h4>
+        <div class="decision-tree">
+  你的需求是什么？
+  │
+  ├── 「我需要一个独特、有记忆点的设计方向」
+  │   └── 用 <span style="color:var(--fd)">frontend-design</span>  ← 它会选一个极端审美方向
+  │
+  ├── 「我需要完整的设计系统+推理依据」
+  │   └── 用 <span style="color:var(--ux)">ui-ux-pro-max</span> --design-system  ← 输出可复用、可持久化
+  │
+  ├── 「我需要确保代码质量、a11y、状态完整」
+  │   └── 用 <span style="color:var(--im)">impeccable</span> polish  ← 工程纪律检查
+  │
+  ├── 「我需要从零搭建一个交付级页面」
+  │   └── 用 <span style="color:var(--ux)">Pipeline</span>: ux-pro-max → frontend-design → impeccable
+  │
+  ├── 「已有 HTML，需要打磨到生产质量」
+  │   └── 用 <span style="color:var(--im)">impeccable</span> polish [file]
+  │
+  ├── 「设计太保守，需要更有个性」
+  │   └── 用 <span style="color:var(--fd)">frontend-design</span> 重新生成（它每次审美不同）
+  │      或 <span style="color:var(--im)">impeccable</span> bolder [file]
+  │
+  ├── 「需要对比评估多个方案」
+  │   └── 分别用三个 skill 独立生成 → 并排对比 → 选最优 → 融合
+  │
+  └── 「只需要调整一个特定问题」
+      ├── 颜色 → <span style="color:var(--im)">impeccable</span> colorize
+      ├── 字体 → <span style="color:var(--im)">impeccable</span> typeset
+      ├── 动画 → <span style="color:var(--im)">impeccable</span> animate
+      ├── 布局 → <span style="color:var(--im)">impeccable</span> layout
+      ├── UX 问题 → <span style="color:var(--ux)">ui-ux-pro-max</span> --domain ux
+      └── 性能 → <span style="color:var(--ux)">ui-ux-pro-max</span> --domain ux performance</div>
+      </div>
+
+      <h3>Skill 能力矩阵</h3>
+      <div class="tw"><table>
+        <tr><th>能力</th><th>frontend-design</th><th>impeccable</th><th>ui-ux-pro-max</th></tr>
+        <tr><td>独特审美方向</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td><td>⭐⭐⭐</td></tr>
+        <tr><td>工程纪律</td><td>⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>无障碍 (a11y)</td><td>⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>设计推理可解释性</td><td>⭐⭐</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>设计系统完整性</td><td>⭐⭐</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>氛围营造</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td><td>⭐⭐</td></tr>
+        <tr><td>状态完整性</td><td>⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐</td></tr>
+        <tr><td>跨会话复用</td><td>⭐</td><td>⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>响应式</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>文案质量</td><td>⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td></tr>
+        <tr><td>性能优化</td><td>⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>品牌一致性</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>不可预测性（正面）</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐</td><td>⭐⭐</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ============ TOKENS ============ -->
+    <section id="tokens" class="sec">
+      <div class="sec-head"><span class="sec-num">07</span><h2>Design Token 指纹分析 — 从 7 个产物反推设计偏好</h2></div>
+
+      <p style="color:var(--ink-dim);margin-bottom:var(--space-5)">
+        分析所有 7 个 HTML 产物中提取的 CSS 变量，识别每个 skill 的<strong>无意识偏好</strong> — 它不说的、但总是做的那些选择。
+      </p>
+
+      <h3>偏好模式</h3>
+      <div class="grid3">
+        <div class="col fd">
+          <h5>frontend-design 固定偏好</h5>
+          <ul style="font-size:var(--fs-body);color:var(--ink-dim);padding-left:var(--space-4);line-height:2">
+            <li>倾向<strong>暗色主题</strong> (2/2 case 暗色)</li>
+            <li><strong>单 accent 策略</strong> — 一个主色 + 语义变体</li>
+            <li><strong>独特字体</strong> — 从不选 Inter/Roboto/Arial</li>
+            <li>氛围营造：径向渐变 · glow · blur backdrop</li>
+            <li>不对称网格 — 拒绝等宽卡片布局</li>
+            <li>HEX 色值 — 简单直接</li>
+          </ul>
+        </div>
+        <div class="col im">
+          <h5>impeccable 固定偏好</h5>
+          <ul style="font-size:var(--fs-body);color:var(--ink-dim);padding-left:var(--space-4);line-height:2">
+            <li>倾向<strong>亮色主题</strong> (2/2 case 亮色)</li>
+            <li><strong>OKLCH 色空间</strong> — 感知均匀 + P3 广色域</li>
+            <li><strong>系统字体栈</strong> — 零外部字体依赖</li>
+            <li>深度用<strong>阴影层级</strong>替代颜色区分</li>
+            <li>4px 间距节奏统一</li>
+            <li>语义 z-index scale</li>
+          </ul>
+        </div>
+        <div class="col ux">
+          <h5>ui-ux-pro-max 固定偏好</h5>
+          <ul style="font-size:var(--fs-body);color:var(--ink-dim);padding-left:var(--space-4);line-height:2">
+            <li>倾向<strong>亮色主题</strong> (2/2 case 亮色)</li>
+            <li><strong>#1E40AF 蓝色高频出现</strong></li>
+            <li><strong>#D97706 琥珀色</strong>作为 accent</li>
+            <li>结构化 token 命名：<br><code>--color-primary</code> · <code>--color-accent</code></li>
+            <li>4px 基础间距单位</li>
+            <li>Fira Code + Fira Sans 偏好</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="insight">
+        <strong>💡 最有价值的发现：色空间选择反映思维模型</strong>
+        <p>
+          frontend-design 用 HEX — 直观、快速、设计师思维。<br>
+          impeccable 用 OKLCH — 科学、精确、工程师思维。OKLCH 感知均匀，同样的数值变化在视觉上的变化幅度一致，HEX 做不到。<br>
+          ui-ux-pro-max 用 HEX — 务实、兼容、系统思维。HEX 最广泛兼容。<br>
+          <strong>这不是谁对谁错，是三种不同的设计哲学在技术选型上的投射。</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ TAKEAWAYS ============ -->
+    <section id="takeaways" class="sec">
+      <div class="sec-head"><span class="sec-num">08</span><h2>带走的东西 · 行动清单</h2></div>
+
+      <div class="card">
+        <h3>10 个深层认知</h3>
+        <ol style="padding-left:var(--space-5);line-height:2.2">
+          <li><strong>三个 skill 是互补的，不是替代的。</strong>frontend-design 没有的工程纪律在 impeccable 里，impeccable 缺乏的审美个性在 frontend-design 里，ui-ux-pro-max 提供两者都缺的设计推理框架。</li>
+          <li><strong>只用其中任何一个，产物都有明显短板。</strong>对比 case1 的三版 HTML 可以看到：fd 版缺 a11y，im 版缺个性，ux 版缺氛围。</li>
+          <li><strong>Pipeline 的关键不是串联，是显式约束传递。</strong>上游的输出必须原样进入下游的 prompt，否则下游会自由发散。</li>
+          <li><strong>每个 skill 都有无意识偏好。</strong>fd 暗色、im 亮色、ux 蓝色 — 这些不是规则写的，但从 7 个产物里能稳定观察到。</li>
+          <li><strong>OKLCH vs HEX 不是技术选择，是思维模型。</strong>设计师思维 → HEX，工程师思维 → OKLCH，系统思维 → 结构化 HEX。</li>
+          <li><strong>impeccable 的绝对禁令是它的核心差异化。</strong>Side-stripe borders、gradient text、glassmorphism — 这些都是 AI 审美的常见病，impeccable 直接匹配拒绝。</li>
+          <li><strong>ui-ux-pro-max 的 10 级优先级是决策框架。</strong>不只是设计指南，更是冲突解决规则：Accessibility > Touch > Performance > Style。</li>
+          <li><strong>frontend-design 的核心是「不可预测性」。</strong>别的 skill 给你可预测的结果，它给你意想不到的结果。这在需要跳出模板时是优势。</li>
+          <li><strong>融合产物的总质量超过任何单个 skill 的产出。</strong>combined.html 同时有 fd 的审美、im 的工程纪律、ux 的 a11y 系统。</li>
+          <li><strong>Skill 编排本身就是一种需要练习的能力。</strong>知道什么时候串、什么时候并、什么时候只用一个 — 这比会用一个 skill 本身更重要。</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>最小实践任务（5 分钟内可完成）</h3>
+        <ol style="padding-left:var(--space-5);line-height:2.2">
+          <li>打开 <code>/Users/jay/mercury-analytics/combined.html</code> — 这是三 skill 融合的共同产物</li>
+          <li>对比 <code>/Users/jay/case1-frontend-design.html</code> 和 <code>/Users/jay/case1-impeccable.html</code> — 感受 fd vs im 的审美差异</li>
+          <li>下次做任何 UI 时，先问自己：这个场景需要调性（fd）？工程纪律（im）？还是设计系统（ux）？</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>进阶学习方向</h3>
+        <div class="tw"><table>
+          <tr><th>方向</th><th>内容</th><th>优先级</th></tr>
+          <tr><td>impeccable 深挖</td><td>读完 26 个子命令的所有 reference 文件，理解每个命令的场景</td><td>高</td></tr>
+          <tr><td>ui-ux-pro-max deep search</td><td>把所有 7 个 domain 都搜一遍，建立对知识库布局的直觉</td><td>高</td></tr>
+          <tr><td>color strategy</td><td>在真实项目中实践 impeccable 的四层色策略框架（Restrained → Committed → Full → Drenched）</td><td>中</td></tr>
+          <tr><td>OKLCH 深潜</td><td>理解为什么 OKLCH 比 HSL 更均匀、比 HEX 更科学 — 在 <a href="https://oklch.com" style="color:var(--accent)">oklch.com</a> 实操</td><td>中</td></tr>
+          <tr><td>自主 pipeline</td><td>不看参考，自己从头跑一遍 pipeline：ux-pro-max → frontend-design → impeccable</td><td>中</td></tr>
+        </table></div>
+      </div>
+
+      <div class="card" style="text-align:center;padding:var(--space-8);background:linear-gradient(135deg,rgba(108,140,240,0.08),rgba(78,168,133,0.06))">
+        <p style="font-size:var(--fs-lg);color:var(--ink);font-weight:600">
+          🎯 三个 skill 学会一个能用，学会两个能打，学会编排三个才能交付。
+        </p>
+        <p style="color:var(--ink-dim);margin-top:var(--space-2);font-size:var(--fs-body)">
+          真正的能力不是「会调哪个 skill」，而是「知道什么时候该调哪个」。
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Generated by Claude Code · learning-mode · 2026-06-13</p>
+    <p style="margin-top:var(--space-2)">数据来源：2026-06-06 五个会话 · 7 个 HTML 产物 · 3 个 skill 定义文件</p>
+  </footer>
+</div>
+</body>
+</html>
